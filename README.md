@@ -23,34 +23,25 @@ O repositório evolui em fases: cada serviço, peça de infra e automação é a
 
 ---
 
-## Arquitetura atual
+## Arquitetura
 
-```
-            ┌──────────────────┐
-            │  Desenvolvedor   │
-            │   (notebook)     │
-            └────────┬─────────┘
-                     │ git push
-                     ▼
-            ┌──────────────────┐         ┌─────────────────────┐
-            │     GitHub       │────────▶│  GitHub Actions     │
-            │  (devspeak-ai)   │         │  CI + Deploy        │
-            └──────────────────┘         └──────────┬──────────┘
-                                                    │ SSH
-                                                    ▼
-                                         ┌─────────────────────┐
-                                         │   AWS EC2           │
-                                         │   Amazon Linux 2    │
-                                         │   ┌─────────────┐   │
-                                         │   │ Docker      │   │
-                                         │   │ container   │   │
-                                         │   │ speech-svc  │──┼──▶ :8080/health
-                                         │   └─────────────┘   │
-                                         └─────────────────────┘
+```mermaid
+graph LR
+    Dev([Desenvolvedor]) -->|git push| GH[GitHub]
+    GH --> CI[CI Pipeline]
+    GH --> CD[Deploy Pipeline]
+    CD -->|SSH| EC2
+    subgraph AWS
+        EC2[EC2 t3.micro<br/>Docker Engine] --> Container[speech-service<br/>:8080]
+    end
+    User([Usuário final]) -->|HTTP| Container
+    TF[Terraform] -.->|provisiona| EC2
 ```
 
 Infraestrutura provisionada via **Terraform** (EC2 + Security Group + Key Pair).
 Manifests **Kubernetes** existem para execução local em Minikube; migração para EKS está no roadmap.
+
+> Diagramas completos (visão de sistema, topologia de deploy, sequência do CI/CD e decisões de arquitetura) em [`docs/architecture.md`](docs/architecture.md).
 
 ---
 
