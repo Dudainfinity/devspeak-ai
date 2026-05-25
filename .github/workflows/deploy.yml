@@ -10,9 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -23,5 +20,13 @@ jobs:
             set -e
             cd ~/devspeak-ai
             git pull origin main
-            docker compose up -d --build
+            cd speech-service
+            docker build -t speech-service .
+            docker stop speech-service 2>/dev/null || true
+            docker rm speech-service 2>/dev/null || true
+            docker run -d \
+              --name speech-service \
+              --restart unless-stopped \
+              -p 8080:8080 \
+              speech-service
             docker image prune -f
