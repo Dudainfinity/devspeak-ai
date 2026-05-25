@@ -32,14 +32,19 @@ graph LR
     GH --> CD[Deploy Pipeline]
     CD -->|SSH| EC2
     subgraph AWS
-        EC2[EC2 t3.micro] --> Nginx[Nginx<br/>:443 HTTPS]
-        Nginx --> Container[speech-service<br/>127.0.0.1:8080]
+        EC2[EC2 t3.micro] --> Container[speech-service<br/>:8080]
+        Nginx[Nginx<br/>preparado, inativo]
     end
-    User([Usuário final]) -->|HTTPS| Nginx
+    User([Usuário final]) -->|HTTP| Container
     TF[Terraform] -.->|provisiona| EC2
+    Nginx -.->|ativar com 1 comando<br/>quando houver domínio| Container
+
+    style Nginx stroke-dasharray: 5 5
 ```
 
-**URL pública:** https://13-220-172-249.sslip.io/health
+**URL pública atual:** http://13.220.172.249:8080/health
+
+> Nginx + Let's Encrypt já estão configurados em `infra/nginx/devspeak.conf` e `infra/scripts/setup-nginx-https.sh`. A ativação está suspensa até registrar um domínio próprio — ver seção [HTTPS](#https-com-nginx-e-lets-encrypt).
 
 Infraestrutura provisionada via **Terraform** (EC2 + Security Group + Key Pair).
 Manifests **Kubernetes** existem para execução local em Minikube; migração para EKS está no roadmap.
@@ -156,9 +161,14 @@ A partir daí, todo `git push` na `main` atualiza a aplicação online automatic
 
 ### HTTPS com Nginx e Let's Encrypt
 
-A aplicação é servida em `https://13-220-172-249.sslip.io` via Nginx como reverse proxy, com certificado Let's Encrypt (renovação automática diária via cron).
+Configuração **pronta no repositório**, ativação pendente até registrar um domínio próprio.
 
-Setup inicial (uma única vez na EC2):
+**Quando o domínio estiver pronto** (registrado e com registro A apontando para a EC2):
+
+1. Editar `infra/nginx/devspeak.conf` — substituir os 3 ocorrências de `13-220-172-249.sslip.io` pelo domínio real.
+2. Editar `infra/scripts/setup-nginx-https.sh` — substituir `DOMAIN=` pelo domínio real.
+3. Commit + push.
+4. Na EC2:
 
 ```bash
 cd ~/devspeak-ai
@@ -166,15 +176,17 @@ git pull origin main
 bash infra/scripts/setup-nginx-https.sh
 ```
 
-O script é **idempotente** — pode ser re-executado sem efeito colateral. Ele:
+5. Editar `.github/workflows/deploy.yml` — trocar `-p 8080:8080` por `-p 127.0.0.1:8080:8080` (bloqueia acesso direto ao container, só Nginx passa).
 
-1. Instala `nginx` e `certbot`
-2. Sobe nginx com config HTTP mínima para validar o desafio ACME
+O script `setup-nginx-https.sh` é **idempotente** — ele:
+
+1. Instala `nginx` e `certbot` (skip se já instalado)
+2. Sobe Nginx com config HTTP mínima para o desafio ACME
 3. Solicita o certificado ao Let's Encrypt via webroot
 4. Substitui pela config completa (HTTPS + reverse proxy + headers de segurança)
-5. Agenda renovação automática (`certbot renew` diário às 03:00 com reload do nginx)
+5. Agenda renovação automática diária às 03:00
 
-> **sslip.io** é um serviço DNS gratuito que mapeia hostnames para IPs codificados no próprio nome (`13-220-172-249.sslip.io` → `13.220.172.249`). Permite obter HTTPS real do Let's Encrypt sem registrar um domínio. Quando houver um domínio próprio, basta substituir o `server_name` no `infra/nginx/devspeak.conf`.
+> **Sobre as tentativas com sslip.io**: foi tentado como solução zero-config, mas o domínio `sslip.io` está saturado no rate limit semanal do Let's Encrypt (50 certificados/semana por *registered domain*, compartilhado entre milhares de usuários do serviço). Por isso, um domínio próprio é o caminho recomendado.
 
 ---
 

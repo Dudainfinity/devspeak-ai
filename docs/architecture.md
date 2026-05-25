@@ -53,19 +53,17 @@ graph TB
     end
 
     subgraph AWS["AWS Cloud (us-east-1)"]
-        SG[Security Group<br/>:22 SSH · :80 HTTP · :443 HTTPS]
+        SG[Security Group<br/>:22 SSH · :8080 HTTP]
         subgraph EC2["EC2 t3.micro · Amazon Linux 2"]
-            Nginx[Nginx<br/>:443 · TLS · reverse proxy]
             Docker[Docker Engine]
-            Container[Container speech-service<br/>127.0.0.1:8080]
-            Nginx --> Container
+            Container[Container speech-service<br/>:8080]
+            Nginx[Nginx<br/>preparado · inativo]
             Docker --> Container
         end
         SG --- EC2
     end
 
     TF[Terraform<br/>infra/main.tf]
-    LE[Let's Encrypt<br/>via sslip.io]
     EndUser([Usuário final])
 
     Dev -->|git push main| GH
@@ -74,8 +72,9 @@ graph TB
     CD -->|SSH + EC2_KEY| Docker
     TF -.->|provisiona| EC2
     TF -.->|provisiona| SG
-    LE -.->|certificado| Nginx
-    EndUser -->|HTTPS :443/health| Nginx
+    EndUser -->|HTTP :8080/health| Container
+
+    style Nginx stroke-dasharray: 5 5
 
     classDef cloud fill:#fff4e6,stroke:#ff9900
     class AWS,EC2,SG cloud
