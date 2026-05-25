@@ -1,0 +1,18 @@
+version: '3.9'
+
+services:
+  speech-service:
+    build: ./speech-service
+    container_name: speech-service
+    ports:
+      - "8080:8080"
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: devspeak
+      POSTGRES_PASSWORD: devspeak123
+      POSTGRES_DB: devspeak_db
+    ports:
+      - "5432:5432"

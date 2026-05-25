@@ -1,0 +1,44 @@
+# Environment
+.env
+.env.*
+!.env.example
+
+# Dependencies / build artifacts
+node_modules/
+bin/
+dist/
+build/
+coverage/
+*.log
+
+# Go
+*.exe
+*.test
+*.out
+vendor/
+
+# Terraform
+**/.terraform/
+**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+!example.tfvars
+
+# AWS / cloud installers and binaries
+awscliv2.zip
+aws/
+minikube-linux-amd64
+*.zip
+*.tar.gz
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

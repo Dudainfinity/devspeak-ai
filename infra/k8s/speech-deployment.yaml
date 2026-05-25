@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: speech-service
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: speech-service
+
+  template:
+    metadata:
+      labels:
+        app: speech-service
+
+    spec:
+      containers:
+        - name: speech-service
+          image: devspeak-speech:latest
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 8080
