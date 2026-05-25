@@ -32,11 +32,14 @@ graph LR
     GH --> CD[Deploy Pipeline]
     CD -->|SSH| EC2
     subgraph AWS
-        EC2[EC2 t3.micro<br/>Docker Engine] --> Container[speech-service<br/>:8080]
+        EC2[EC2 t3.micro] --> Nginx[Nginx<br/>:443 HTTPS]
+        Nginx --> Container[speech-service<br/>127.0.0.1:8080]
     end
-    User([Usuário final]) -->|HTTP| Container
+    User([Usuário final]) -->|HTTPS| Nginx
     TF[Terraform] -.->|provisiona| EC2
 ```
+
+**URL pública:** https://13-220-172-249.sslip.io/health
 
 Infraestrutura provisionada via **Terraform** (EC2 + Security Group + Key Pair).
 Manifests **Kubernetes** existem para execução local em Minikube; migração para EKS está no roadmap.
@@ -47,16 +50,17 @@ Manifests **Kubernetes** existem para execução local em Minikube; migração p
 
 ## Stack tecnológica
 
-| Camada            | Tecnologia                         |
-|-------------------|------------------------------------|
-| Linguagem         | Go 1.24                            |
-| Containerização   | Docker, Docker Compose             |
-| Orquestração      | Kubernetes (Minikube — local)      |
-| Cloud             | AWS EC2 (`t3.micro`, Amazon Linux) |
-| IaC               | Terraform                          |
-| CI/CD             | GitHub Actions                     |
-| Observabilidade   | Prometheus, Grafana (local)        |
-| Versionamento     | Git + GitHub                       |
+| Camada            | Tecnologia                                    |
+|-------------------|-----------------------------------------------|
+| Linguagem         | Go 1.24                                       |
+| Containerização   | Docker, Docker Compose                        |
+| Orquestração      | Kubernetes (Minikube — local)                 |
+| Cloud             | AWS EC2 (`t3.micro`, Amazon Linux)            |
+| IaC               | Terraform                                     |
+| Reverse proxy     | Nginx + Let's Encrypt (HTTPS via sslip.io)    |
+| CI/CD             | GitHub Actions                                |
+| Observabilidade   | Prometheus, Grafana (local)                   |
+| Versionamento     | Git + GitHub                                  |
 
 ---
 
@@ -73,6 +77,10 @@ devspeak-ai/
 ├── infra/
 │   ├── main.tf              # Terraform: EC2 + Security Group
 │   ├── terraform/           # módulos auxiliares
+│   ├── nginx/
+│   │   └── devspeak.conf    # config Nginx (HTTPS + reverse proxy)
+│   ├── scripts/
+│   │   └── setup-nginx-https.sh   # bootstrap idempotente do TLS
 │   └── k8s/                 # manifests Kubernetes
 │       ├── speech-deployment.yaml
 │       └── speech-service.yaml
@@ -145,6 +153,28 @@ cd ~ && git clone https://github.com/Dudainfinity/devspeak-ai.git
 ```
 
 A partir daí, todo `git push` na `main` atualiza a aplicação online automaticamente.
+
+### HTTPS com Nginx e Let's Encrypt
+
+A aplicação é servida em `https://13-220-172-249.sslip.io` via Nginx como reverse proxy, com certificado Let's Encrypt (renovação automática diária via cron).
+
+Setup inicial (uma única vez na EC2):
+
+```bash
+cd ~/devspeak-ai
+git pull origin main
+bash infra/scripts/setup-nginx-https.sh
+```
+
+O script é **idempotente** — pode ser re-executado sem efeito colateral. Ele:
+
+1. Instala `nginx` e `certbot`
+2. Sobe nginx com config HTTP mínima para validar o desafio ACME
+3. Solicita o certificado ao Let's Encrypt via webroot
+4. Substitui pela config completa (HTTPS + reverse proxy + headers de segurança)
+5. Agenda renovação automática (`certbot renew` diário às 03:00 com reload do nginx)
+
+> **sslip.io** é um serviço DNS gratuito que mapeia hostnames para IPs codificados no próprio nome (`13-220-172-249.sslip.io` → `13.220.172.249`). Permite obter HTTPS real do Let's Encrypt sem registrar um domínio. Quando houver um domínio próprio, basta substituir o `server_name` no `infra/nginx/devspeak.conf`.
 
 ---
 

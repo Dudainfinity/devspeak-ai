@@ -27,6 +27,6 @@ jobs:
             docker run -d \
               --name speech-service \
               --restart unless-stopped \
-              -p 8080:8080 \
+              -p 127.0.0.1:8080:8080 \
               speech-service
             docker image prune -f

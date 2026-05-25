@@ -53,16 +53,19 @@ graph TB
     end
 
     subgraph AWS["AWS Cloud (us-east-1)"]
-        SG[Security Group<br/>devspeak-security-group<br/>:22 SSH · :8080 HTTP]
+        SG[Security Group<br/>:22 SSH · :80 HTTP · :443 HTTPS]
         subgraph EC2["EC2 t3.micro · Amazon Linux 2"]
+            Nginx[Nginx<br/>:443 · TLS · reverse proxy]
             Docker[Docker Engine]
-            Container[Container<br/>speech-service<br/>:8080]
+            Container[Container speech-service<br/>127.0.0.1:8080]
+            Nginx --> Container
             Docker --> Container
         end
         SG --- EC2
     end
 
     TF[Terraform<br/>infra/main.tf]
+    LE[Let's Encrypt<br/>via sslip.io]
     EndUser([Usuário final])
 
     Dev -->|git push main| GH
@@ -71,7 +74,8 @@ graph TB
     CD -->|SSH + EC2_KEY| Docker
     TF -.->|provisiona| EC2
     TF -.->|provisiona| SG
-    EndUser -->|HTTP :8080/health| Container
+    LE -.->|certificado| Nginx
+    EndUser -->|HTTPS :443/health| Nginx
 
     classDef cloud fill:#fff4e6,stroke:#ff9900
     class AWS,EC2,SG cloud
@@ -139,6 +143,18 @@ sequenceDiagram
 
 - **Terraform** garante que a infra é reproduzível: posso destruir e recriar a EC2 com um comando.
 - **Kubernetes local (Minikube)** permite validar manifests (`Deployment`, `Service`, `replicas`) antes da migração para EKS, sem custo de cloud durante o aprendizado.
+
+### Por que Nginx na frente do container?
+
+- **TLS termination**: o Go service só fala HTTP em `127.0.0.1:8080`; Nginx cuida de HTTPS, certificados e renovação automática.
+- **Headers de segurança**: HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` configurados em um único ponto.
+- **Container exposto apenas em `127.0.0.1`**: defense-in-depth — mesmo que a porta 8080 esteja aberta no Security Group, o container só aceita conexões do próprio host (do Nginx). O mundo externo não consegue contornar o reverse proxy.
+- **Compressão (gzip) e ponto futuro para cache**: tarefas que não pertencem ao código de aplicação.
+
+### Por que sslip.io em vez de domínio próprio?
+
+- Permite HTTPS real (Let's Encrypt) sem registrar domínio — ideal para validar a stack rapidamente.
+- A migração para um domínio próprio é mecânica: alterar `server_name` em `infra/nginx/devspeak.conf`, repetir `setup-nginx-https.sh`, apontar registro A do domínio para o IP da EC2.
 
 ### Por que SSH no deploy em vez de pull-based?
 
