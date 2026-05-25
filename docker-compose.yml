@@ -1,7 +1,6 @@
-version: '3.9'
-
 services:
   speech-service:
+    image: ghcr.io/dudainfinity/devspeak-speech-service:latest
     build: ./speech-service
     container_name: speech-service
     ports:

@@ -94,33 +94,35 @@ sequenceDiagram
     autonumber
     actor Dev as Desenvolvedor
     participant GH as GitHub
-    participant CI as CI Workflow
-    participant CD as Deploy Workflow
+    participant Runner as GitHub Actions Runner
+    participant GHCR as GHCR (registry)
     participant EC2 as AWS EC2
     participant Old as Container antigo
     participant New as Container novo
 
     Dev->>GH: git push origin main
-    GH->>CI: trigger ci.yml
-    GH->>CD: trigger deploy.yml
+    GH->>Runner: trigger cicd.yml
 
-    par CI (validação)
-        CI->>CI: go mod tidy
-        CI->>CI: go build
-        CI->>CI: docker build (validação)
-    and Deploy (entrega)
-        CD->>EC2: SSH com EC2_KEY
-        EC2->>EC2: cd ~/devspeak-ai && git pull
-        EC2->>EC2: docker build -t speech-service .
-        EC2->>Old: docker stop && docker rm
-        EC2->>New: docker run -d --restart unless-stopped
-        EC2->>EC2: docker image prune -f
+    rect rgb(245, 245, 255)
+    Note over Runner,GHCR: Job 1 — build
+    Runner->>Runner: go build (validação)
+    Runner->>Runner: docker buildx (multi-stage)
+    Runner->>GHCR: docker push :latest e :main-sha
+    end
+
+    rect rgb(245, 255, 245)
+    Note over Runner,New: Job 2 — deploy (needs: build)
+    Runner->>EC2: SSH com EC2_KEY
+    EC2->>GHCR: docker login + pull :latest
+    EC2->>Old: docker stop && docker rm
+    EC2->>New: docker run -d --restart unless-stopped
+    EC2->>EC2: docker image prune -f
     end
 
     Note over New: aplicação atualizada<br/>HTTP :8080/health responde nova versão
 ```
 
-**Tempo médio de deploy:** ~5 segundos quando o build do Docker está em cache (Go binário não mudou) e até ~1 minuto em rebuilds completos.
+**Tempo médio de deploy:** ~1 minuto no total (build na runner é o gargalo; deploy em si leva ~5 segundos porque a EC2 só faz pull + run, sem build local).
 
 ---
 
@@ -131,6 +133,13 @@ sequenceDiagram
 - Binário único, sem runtime — imagens Docker pequenas e startup rápido.
 - Ergonomia natural para HTTP, métricas e concorrência.
 - Alinhado com o stack típico de plataformas cloud-native (Docker, Kubernetes, Prometheus — todos escritos em Go).
+
+### Por que GHCR em vez de buildar na EC2?
+
+- **Recurso**: build de Go + Docker em `t3.micro` (1GB RAM) é desconfortável. Runner GitHub é uma máquina cheia e gratuita para repos públicos.
+- **Versionamento real**: cada commit gera uma tag imutável (`main-<sha7>`) no registry, permitindo rollback instantâneo (`docker run ...:main-abc123f`) sem precisar reverter código.
+- **Desacopla build de deploy**: pré-requisito para promover a mesma imagem entre staging e produção, deploy blue/green, ou imagens consumidas por outros ambientes (K8s, por exemplo).
+- **Imagem enxuta**: o Dockerfile multi-stage produz uma imagem de ~15 MB (Alpine + binário Go estático). `docker pull` na EC2 é praticamente instantâneo.
 
 ### Por que `docker run` em vez de `docker compose` na EC2?
 

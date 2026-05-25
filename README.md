@@ -2,8 +2,8 @@
 
 > Plataforma com IA para ajudar desenvolvedores a se prepararem para entrevistas técnicas internacionais em inglês.
 
-![CI](https://github.com/Dudainfinity/devspeak-ai/actions/workflows/ci.yml/badge.svg)
-![Deploy](https://github.com/Dudainfinity/devspeak-ai/actions/workflows/deploy.yml/badge.svg)
+![CI/CD](https://github.com/Dudainfinity/devspeak-ai/actions/workflows/cicd.yml/badge.svg)
+![GHCR](https://img.shields.io/badge/image-ghcr.io%2Fdudainfinity%2Fdevspeak--speech--service-181717?logo=github)
 ![Go](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 ![AWS](https://img.shields.io/badge/AWS-EC2-FF9900?logo=amazonaws&logoColor=white)
@@ -28,21 +28,23 @@ O repositório evolui em fases: cada serviço, peça de infra e automação é a
 ```mermaid
 graph LR
     Dev([Desenvolvedor]) -->|git push| GH[GitHub]
-    GH --> CI[CI Pipeline]
-    GH --> CD[Deploy Pipeline]
-    CD -->|SSH| EC2
+    GH --> Build[Runner: build + test]
+    Build -->|docker push| GHCR[(GHCR<br/>ghcr.io/.../speech-service)]
+    Build --> Deploy[Deploy job]
+    Deploy -->|SSH| EC2
     subgraph AWS
-        EC2[EC2 t3.micro] --> Container[speech-service<br/>:8080]
+        EC2[EC2 t3.micro] -->|docker pull| GHCR
+        EC2 --> Container[speech-service<br/>:8080]
         Nginx[Nginx<br/>preparado, inativo]
     end
     User([Usuário final]) -->|HTTP| Container
     TF[Terraform] -.->|provisiona| EC2
-    Nginx -.->|ativar com 1 comando<br/>quando houver domínio| Container
 
     style Nginx stroke-dasharray: 5 5
 ```
 
 **URL pública atual:** http://13.220.172.249:8080/health
+**Imagem no GHCR:** `ghcr.io/dudainfinity/devspeak-speech-service:latest`
 
 > Nginx + Let's Encrypt já estão configurados em `infra/nginx/devspeak.conf` e `infra/scripts/setup-nginx-https.sh`. A ativação está suspensa até registrar um domínio próprio — ver seção [HTTPS](#https-com-nginx-e-lets-encrypt).
 
@@ -63,6 +65,7 @@ Manifests **Kubernetes** existem para execução local em Minikube; migração p
 | Cloud             | AWS EC2 (`t3.micro`, Amazon Linux)            |
 | IaC               | Terraform                                     |
 | Reverse proxy     | Nginx + Let's Encrypt (HTTPS via sslip.io)    |
+| Container Registry| GitHub Container Registry (GHCR)              |
 | CI/CD             | GitHub Actions                                |
 | Observabilidade   | Prometheus, Grafana (local)                   |
 | Versionamento     | Git + GitHub                                  |
@@ -128,12 +131,30 @@ docker run -d -p 8080:8080 --name speech-service speech-service
 
 ## Deploy automatizado (CI/CD)
 
-A cada `git push` na branch `main`, dois workflows são disparados em paralelo:
+A cada `git push` na branch `main`, um workflow único (`.github/workflows/cicd.yml`) executa dois jobs em sequência:
 
-| Workflow      | Arquivo                       | O que faz                                          |
-|---------------|-------------------------------|----------------------------------------------------|
-| **CI**        | `.github/workflows/ci.yml`    | `go mod tidy`, `go build`, build da imagem Docker  |
-| **Deploy**    | `.github/workflows/deploy.yml`| SSH na EC2, `git pull`, rebuild e restart do container |
+| Job            | O que faz                                                                                |
+|----------------|------------------------------------------------------------------------------------------|
+| **build**      | `go build` + multi-stage Docker build + `docker push` no GHCR com tags `latest` e `main-<sha>` |
+| **deploy**     | SSH na EC2, `docker pull` da imagem nova do GHCR, restart do container                   |
+
+O job `deploy` depende de `build` (`needs: build`), então só roda se a imagem foi publicada com sucesso — eliminando race condition entre publicação e deploy.
+
+### Estratégia de imagens
+
+| Tag                  | Quando é gerada                | Uso                                     |
+|----------------------|--------------------------------|-----------------------------------------|
+| `latest`             | a cada push na `main`          | deploy automático                       |
+| `main-<sha7>`        | a cada push na `main`          | rollback / auditoria — versão imutável  |
+
+**Rollback** vira `docker run ghcr.io/dudainfinity/devspeak-speech-service:main-<sha-antigo>`.
+
+### Rodar a imagem do GHCR localmente
+
+```bash
+docker pull ghcr.io/dudainfinity/devspeak-speech-service:latest
+docker run -d -p 8080:8080 ghcr.io/dudainfinity/devspeak-speech-service:latest
+```
 
 ### Secrets necessários
 
