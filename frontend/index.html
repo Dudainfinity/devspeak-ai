@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevSpeak AI — Domine entrevistas técnicas em inglês</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#"><span>Dev</span>Speak AI</a>
+  <ul>
+    <li><a href="#como-funciona">Como funciona</a></li>
+    <li><a href="#simulador">Simulador</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="https://github.com/Dudainfinity/devspeak-ai" target="_blank">GitHub</a></li>
+  </ul>
+  <a class="nav-cta" href="#simulador">Começar agora</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="badge"><span class="badge-dot"></span>Beta — open source · Go + AWS</div>
+  <h1>Fale como um dev<br/><em>internacional</em>.</h1>
+  <p class="hero-sub">Simule entrevistas técnicas em inglês com correção assistida por IA. Evolua a sua comunicação, uma pergunta de cada vez.</p>
+  <div class="hero-actions">
+    <a class="btn-primary" href="#simulador">▶ Testar o simulador</a>
+    <a class="btn-secondary" href="https://github.com/Dudainfinity/devspeak-ai" target="_blank">Ver no GitHub</a>
+  </div>
+
+  <div class="hero-terminal">
+    <div class="terminal-bar">
+      <span class="dot" style="background:#ef4444"></span>
+      <span class="dot" style="background:#f59e0b"></span>
+      <span class="dot" style="background:#22c55e"></span>
+      <span style="margin-left:8px; font-family:var(--font-mono); font-size:0.7rem; color:var(--muted)">devspeak-ai — speech-service</span>
+    </div>
+    <div class="terminal-body">
+      <div><span class="t-prompt">$</span> <span class="t-cmd">curl http://13.220.172.249:8080/health</span></div>
+      <div class="t-out">DevSpeak AI Speech Service Running ✓</div>
+      <div style="margin-top:0.5rem"><span class="t-prompt">$</span> <span class="t-cmd">devspeak start --lang en --level mid</span></div>
+      <div class="t-q">Q: "Explain the difference between a goroutine and a thread."</div>
+      <div class="t-a">A: A goroutine is a lightweight... <span class="cursor"></span></div>
+      <div class="t-score" style="margin-top:0.5rem">→ Score: 8.4/10  Fluency: B2  Vocab: ★★★★☆</div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-label">// o que entregamos</div>
+  <h2>Tudo que você precisa para<br/>conquistar a vaga internacional</h2>
+  <p class="section-sub">Uma plataforma que combina prática real com feedback técnico e linguístico preciso.</p>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🎙️</div>
+      <h3>Simulador de entrevistas</h3>
+      <p>Perguntas técnicas reais em inglês, organizadas por nível e stack. Pratique no seu ritmo ou em modo cronometrado.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🤖</div>
+      <h3>Correção por IA</h3>
+      <p>Sua resposta é analisada em gramática, coerência técnica, fluência e vocabulário. Feedback detalhado a cada tentativa.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3>Dashboard de evolução</h3>
+      <p>Acompanhe seu progresso ao longo do tempo. Veja onde você melhora e onde precisa focar mais.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🏗️</div>
+      <h3>Arquitetura DevOps real</h3>
+      <p>Microsserviços em Go, CI/CD com GitHub Actions, infra na AWS com Terraform e Kubernetes. Open source do início ao fim.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔊</div>
+      <h3>Speech-to-text (em breve)</h3>
+      <p>Responda falando. Transcrição e análise de pronúncia integradas diretamente no simulador.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <h3>Autenticação segura</h3>
+      <p>Conta própria com histórico de sessões, progresso salvo e acesso multiplataforma. Em desenvolvimento.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="como-funciona" style="border-top: 1px solid var(--border);">
+  <div class="section-label">// como funciona</div>
+  <h2>Simples. Técnico. Eficaz.</h2>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-content">
+        <h3>Escolha seu nível e stack</h3>
+        <p>Selecione entre júnior, pleno ou sênior. Defina a área: backend, frontend, DevOps ou sistemas distribuídos. O simulador ajusta as perguntas automaticamente.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-content">
+        <h3>Responda em inglês</h3>
+        <p>Uma pergunta técnica real aparece na tela. Você responde digitando (ou, em breve, falando). Sem tradução automática — o objetivo é praticar o pensamento em inglês.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-content">
+        <h3>Receba feedback detalhado</h3>
+        <p>A IA avalia tecnicamente a sua resposta e aponta erros de inglês, sugestões de vocabulário técnico e alternativas mais naturais para o contexto de entrevista.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-content">
+        <h3>Evolua com métricas reais</h3>
+        <p>Cada sessão gera dados sobre fluência, precisão técnica e nível de vocabulário. Com o tempo, você vê curvas de melhora concretas e sabe exatamente onde focar.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SIMULADOR -->
+<section id="simulador" style="padding: 4rem 2rem 6rem;">
+  <div class="section-label">// simulador — demo</div>
+  <h2>Experimente agora</h2>
+  <p class="section-sub">Responda a uma pergunta técnica real e veja como funciona o feedback da IA.</p>
+
+  <div class="sim-wrap">
+    <div class="sim-header">
+      <span class="sim-title">devspeak-ai / interview-simulator</span>
+      <span class="sim-status"><span class="badge-dot"></span> demo mode</span>
+    </div>
+    <div class="sim-body">
+      <div id="level-select" style="margin-bottom:1.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--muted);margin-right:0.5rem;align-self:center;">nível:</span>
+        <button class="level-btn active" data-level="junior" onclick="setLevel(this)">Junior</button>
+        <button class="level-btn" data-level="mid" onclick="setLevel(this)">Mid-level</button>
+        <button class="level-btn" data-level="senior" onclick="setLevel(this)">Senior</button>
+      </div>
+
+      <div class="sim-question" id="question-box">
+        <div class="sim-qlabel">// question 1 of 5 · backend</div>
+        <div class="sim-qtext" id="question-text">
+          Explain the difference between <em>concurrency</em> and <em>parallelism</em>. Give a real-world example of each.
+        </div>
+      </div>
+
+      <textarea class="sim-input" id="answer-input" placeholder="Type your answer in English..."></textarea>
+
+      <div class="sim-actions">
+        <button class="btn-primary" onclick="submitAnswer()">Submit answer</button>
+        <button class="btn-secondary" onclick="nextQuestion()">Skip →</button>
+        <span class="sim-hint" id="char-count">0 / 50 chars mínimos</span>
+      </div>
+
+      <div class="feedback-panel" id="feedback-panel">
+        <div class="fb-header">
+          <span class="fb-label">// ai feedback</span>
+          <span class="score-badge" id="score-badge">—</span>
+        </div>
+        <div class="fb-section">
+          <h4>// technical accuracy</h4>
+          <p id="fb-technical"></p>
+        </div>
+        <div class="fb-section">
+          <h4>// english improvements</h4>
+          <ul id="fb-english"></ul>
+        </div>
+        <div class="fb-section">
+          <h4>// suggested vocabulary</h4>
+          <ul id="fb-vocab"></ul>
+        </div>
+        <div style="margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border);">
+          <button class="btn-primary" onclick="nextQuestion()" style="font-size:0.85rem; padding:0.6rem 1.25rem;">Next question →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STACK -->
+<section style="border-top: 1px solid var(--border);">
+  <div class="section-label">// stack técnica</div>
+  <h2>Construído com o que a<br/>indústria usa de verdade</h2>
+
+  <div class="stack-grid">
+    <div class="stack-item"><span class="stack-name">Go 1.24</span><span class="stack-role">linguagem principal</span></div>
+    <div class="stack-item"><span class="stack-name">Docker</span><span class="stack-role">containerização</span></div>
+    <div class="stack-item"><span class="stack-name">Kubernetes</span><span class="stack-role">orquestração</span></div>
+    <div class="stack-item"><span class="stack-name">AWS EC2</span><span class="stack-role">cloud provider</span></div>
+    <div class="stack-item"><span class="stack-name">Terraform</span><span class="stack-role">infra como código</span></div>
+    <div class="stack-item"><span class="stack-name">GitHub Actions</span><span class="stack-role">CI/CD</span></div>
+    <div class="stack-item"><span class="stack-name">Nginx</span><span class="stack-role">reverse proxy</span></div>
+    <div class="stack-item"><span class="stack-name">Prometheus</span><span class="stack-role">observabilidade</span></div>
+    <div class="stack-item"><span class="stack-name">GHCR</span><span class="stack-role">container registry</span></div>
+    <div class="stack-item"><span class="stack-name">OpenAI API</span><span class="stack-role">IA (em breve)</span></div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap" style="border-top: 1px solid var(--border);">
+  <div class="section-label">// roadmap</div>
+  <h2>O que já existe e o que vem por aí</h2>
+
+  <div class="roadmap-grid">
+    <div class="roadmap-col">
+      <h3>Infra & DevOps</h3>
+      <ul>
+        <li><span class="r-dot r-done"></span>CI/CD com GitHub Actions</li>
+        <li><span class="r-dot r-done"></span>Docker + GHCR</li>
+        <li><span class="r-dot r-done"></span>EC2 + Terraform</li>
+        <li><span class="r-dot r-done"></span>Kubernetes local</li>
+        <li><span class="r-dot r-wip"></span>Nginx + HTTPS</li>
+        <li><span class="r-dot r-todo"></span>Staging / Production</li>
+        <li><span class="r-dot r-todo"></span>EKS (migração)</li>
+        <li><span class="r-dot r-todo"></span>CloudWatch + alertas</li>
+      </ul>
+    </div>
+    <div class="roadmap-col">
+      <h3>Produto</h3>
+      <ul>
+        <li><span class="r-dot r-wip"></span>Frontend web</li>
+        <li><span class="r-dot r-todo"></span>API principal</li>
+        <li><span class="r-dot r-todo"></span>Autenticação</li>
+        <li><span class="r-dot r-todo"></span>Integração OpenAI</li>
+        <li><span class="r-dot r-todo"></span>Speech-to-text</li>
+        <li><span class="r-dot r-todo"></span>Simulador completo</li>
+        <li><span class="r-dot r-todo"></span>Dashboard candidato</li>
+      </ul>
+    </div>
+    <div class="roadmap-col">
+      <h3>Legenda</h3>
+      <ul>
+        <li><span class="r-dot r-done"></span>Concluído</li>
+        <li><span class="r-dot r-wip"></span>Em progresso</li>
+        <li><span class="r-dot r-todo"></span>Planejado</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="section-label">// open source</div>
+  <h2>Contribua com o projeto</h2>
+  <p>DevSpeak AI é open source. Issues, PRs e ideias são bem-vindos.</p>
+  <a class="btn-primary" href="https://github.com/Dudainfinity/devspeak-ai" target="_blank">Ver no GitHub →</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span>© 2026 DevSpeak AI — open source</span>
+  <div style="display:flex;gap:1.5rem;">
+    <a href="https://github.com/Dudainfinity/devspeak-ai" target="_blank">GitHub</a>
+    <a href="http://13.220.172.249:8080/health" target="_blank">API Health</a>
+  </div>
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>
