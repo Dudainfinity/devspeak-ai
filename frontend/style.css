@@ -552,6 +552,18 @@ footer a:hover { color: var(--text); }
 .r-wip  { background: var(--warn); }
 .r-todo { background: var(--border2); }
 
+/* ── Status summary (substitui a legenda colorida quando tudo concluído) ── */
+.status-summary li { flex-direction: column; gap: 0.15rem; margin-bottom: 0.5rem; }
+.status-summary li::before { content: none; }
+.status-num {
+  font-family: var(--font-head); font-size: 1.15rem; font-weight: 700;
+  color: var(--accent); line-height: 1.1;
+}
+.status-label {
+  font-family: var(--font-mono); font-size: 0.72rem;
+  color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 640px) {
   nav ul { display: none; }

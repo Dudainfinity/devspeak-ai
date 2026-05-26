@@ -1,0 +1,91 @@
+name: Deploy Staging
+
+# Deploy isolado para um ambiente de staging.
+#
+# Trigger:
+#   - push na branch `staging` (deploy contínuo do staging)
+#   - workflow_dispatch (deploy manual sob demanda)
+#
+# Imagem usada:
+#   ghcr.io/dudainfinity/devspeak-speech-service:staging-<sha7>
+#   (publicada pelo workflow cicd.yml quando rodar na branch `staging`)
+#
+# Secrets necessários (Settings → Secrets and variables → Actions):
+#   STAGING_EC2_HOST  — IP/host da instância de staging
+#   STAGING_EC2_USER  — usuário SSH (geralmente ec2-user)
+#   STAGING_EC2_KEY   — chave privada .pem completa
+#   STAGING_JWT_SECRET    (opcional, recomendado em prod) — chave de assinatura JWT
+#   STAGING_DATABASE_URL  (opcional) — DSN do postgres do staging
+#   STAGING_OPENAI_API_KEY (opcional) — para IA real no staging
+#
+# Se STAGING_EC2_HOST não estiver setado, o job é pulado silenciosamente.
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  guard:
+    name: Check staging configured
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - id: check
+        env:
+          STAGING_HOST: ${{ secrets.STAGING_EC2_HOST }}
+        run: |
+          if [ -n "$STAGING_HOST" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "Staging host configured."
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::STAGING_EC2_HOST not set — skipping staging deploy."
+          fi
+
+  deploy:
+    name: Deploy to Staging EC2
+    needs: guard
+    if: needs.guard.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          GHCR_TOKEN:           ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER:            ${{ github.actor }}
+          STAGING_JWT_SECRET:   ${{ secrets.STAGING_JWT_SECRET }}
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          STAGING_OPENAI_KEY:   ${{ secrets.STAGING_OPENAI_API_KEY }}
+        with:
+          host:     ${{ secrets.STAGING_EC2_HOST }}
+          username: ${{ secrets.STAGING_EC2_USER }}
+          key:      ${{ secrets.STAGING_EC2_KEY }}
+          envs: GHCR_TOKEN,GHCR_USER,STAGING_JWT_SECRET,STAGING_DATABASE_URL,STAGING_OPENAI_KEY
+          script: |
+            set -e
+            IMAGE="ghcr.io/dudainfinity/devspeak-speech-service:staging-${GITHUB_SHA::7}"
+
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            docker pull "$IMAGE" || docker pull ghcr.io/dudainfinity/devspeak-speech-service:latest
+            docker logout ghcr.io >/dev/null 2>&1 || true
+
+            docker stop speech-service-staging 2>/dev/null || true
+            docker rm   speech-service-staging 2>/dev/null || true
+
+            docker run -d \
+              --name speech-service-staging \
+              --restart unless-stopped \
+              -p 8081:8080 \
+              -e JWT_SECRET="${STAGING_JWT_SECRET:-}" \
+              -e DATABASE_URL="${STAGING_DATABASE_URL:-}" \
+              -e OPENAI_API_KEY="${STAGING_OPENAI_KEY:-}" \
+              "$IMAGE"
+
+            docker image prune -f
