@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0b0e'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-family='monospace' font-weight='700' font-size='16' fill='%2300e5a0'%3ED%3C/text%3E%3C/svg%3E" />
 </head>
 <body>
 
@@ -16,10 +17,17 @@
   <ul>
     <li><a href="#como-funciona">Como funciona</a></li>
     <li><a href="#simulador">Simulador</a></li>
+    <li><a href="#dashboard" id="nav-dashboard" style="display:none;">Meu progresso</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="https://github.com/Dudainfinity/devspeak-ai" target="_blank">GitHub</a></li>
   </ul>
-  <a class="nav-cta" href="#simulador">Começar agora</a>
+  <div class="nav-auth">
+    <a class="nav-cta" href="#auth" id="nav-cta-guest">Entrar / Cadastrar</a>
+    <div class="nav-user" id="nav-user" style="display:none;">
+      <span id="nav-user-name">—</span>
+      <button class="btn-secondary btn-mini" type="button" onclick="logout()">Sair</button>
+    </div>
+  </div>
 </nav>
 
 <!-- HERO -->
@@ -129,62 +137,225 @@
   </div>
 </section>
 
+<!-- AUTH (login/signup) — só aparece quando deslogado -->
+<section id="auth" style="padding: 4rem 2rem 2rem; display:none;">
+  <div class="section-label">// conta</div>
+  <h2 id="auth-title">Crie sua conta</h2>
+  <p class="section-sub">Salve seu histórico, acompanhe a evolução e personalize as perguntas.</p>
+
+  <div class="auth-tabs">
+    <button class="auth-tab active" data-tab="signup" onclick="switchAuthTab('signup')">Cadastrar</button>
+    <button class="auth-tab" data-tab="login" onclick="switchAuthTab('login')">Entrar</button>
+  </div>
+
+  <!-- SIGNUP -->
+  <form id="form-signup" class="auth-form" onsubmit="event.preventDefault(); doSignup();">
+    <div class="form-row">
+      <label><span class="form-label">Nome</span><input type="text" id="su-name" required maxlength="60" /></label>
+      <label><span class="form-label">Email</span><input type="email" id="su-email" required /></label>
+    </div>
+    <div class="form-row">
+      <label><span class="form-label">Senha (≥6)</span><input type="password" id="su-password" required minlength="6" /></label>
+      <label><span class="form-label">Anos de experiência</span><input type="number" id="su-years" min="0" max="40" value="2" /></label>
+    </div>
+    <div class="form-row">
+      <label>
+        <span class="form-label">Stack principal</span>
+        <select id="su-stack" required>
+          <option value="backend">Backend</option><option value="frontend">Frontend</option>
+          <option value="fullstack">Full-stack</option><option value="devops">DevOps / SRE</option>
+          <option value="data">Data / ML</option><option value="mobile">Mobile</option>
+        </select>
+      </label>
+      <label>
+        <span class="form-label">Nível alvo</span>
+        <select id="su-level" required>
+          <option value="junior">Junior</option><option value="mid" selected>Mid-level</option><option value="senior">Senior</option>
+        </select>
+      </label>
+      <label>
+        <span class="form-label">Linguagem principal</span>
+        <select id="su-lang">
+          <option>Go</option><option>Python</option><option>Java</option><option>JavaScript</option>
+          <option>TypeScript</option><option>C#</option><option>Ruby</option><option>Rust</option><option>Outra</option>
+        </select>
+      </label>
+    </div>
+    <label class="form-fullwidth">
+      <span class="form-label">Descrição da vaga / função alvo</span>
+      <textarea id="su-target" rows="4" placeholder="Ex: 'Backend engineer em fintech, Go + Kubernetes, pagamentos de alto volume'"></textarea>
+    </label>
+    <div class="auth-error" id="signup-error"></div>
+    <div class="form-actions">
+      <button type="submit" class="btn-primary" id="signup-submit">Criar conta →</button>
+    </div>
+  </form>
+
+  <!-- LOGIN -->
+  <form id="form-login" class="auth-form" style="display:none;" onsubmit="event.preventDefault(); doLogin();">
+    <div class="form-row">
+      <label><span class="form-label">Email</span><input type="email" id="li-email" required /></label>
+      <label><span class="form-label">Senha</span><input type="password" id="li-password" required /></label>
+    </div>
+    <div class="auth-error" id="login-error"></div>
+    <div class="form-actions">
+      <button type="submit" class="btn-primary" id="login-submit">Entrar →</button>
+    </div>
+  </form>
+</section>
+
 <!-- SIMULADOR -->
 <section id="simulador" style="padding: 4rem 2rem 6rem;">
-  <div class="section-label">// simulador — demo</div>
+  <div class="section-label">// simulador — personalizado</div>
   <h2>Experimente agora</h2>
-  <p class="section-sub">Responda a uma pergunta técnica real e veja como funciona o feedback da IA.</p>
+  <p class="section-sub">Conta seu perfil e a vaga que você está mirando. As perguntas se adaptam ao seu nível, stack e ao contexto da posição.</p>
 
   <div class="sim-wrap">
     <div class="sim-header">
       <span class="sim-title">devspeak-ai / interview-simulator</span>
-      <span class="sim-status"><span class="badge-dot"></span> demo mode</span>
+      <span class="sim-status" id="sim-status-label"><span class="badge-dot"></span> profile mode</span>
     </div>
+
     <div class="sim-body">
-      <div id="level-select" style="margin-bottom:1.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
-        <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--muted);margin-right:0.5rem;align-self:center;">nível:</span>
-        <button class="level-btn active" data-level="junior" onclick="setLevel(this)">Junior</button>
-        <button class="level-btn" data-level="mid" onclick="setLevel(this)">Mid-level</button>
-        <button class="level-btn" data-level="senior" onclick="setLevel(this)">Senior</button>
+      <!-- ETAPA 1: FORM DE PERFIL -->
+      <div id="profile-form" class="profile-form">
+        <div class="profile-form-header">
+          <h3>Crie seu perfil de candidato</h3>
+          <p>Quanto mais específico for, mais ajustadas serão as perguntas.</p>
+        </div>
+
+        <form id="profile-fields" onsubmit="event.preventDefault(); saveProfile();">
+          <div class="form-row">
+            <label>
+              <span class="form-label">Nome</span>
+              <input type="text" id="pf-name" placeholder="Maria Eduarda" required maxlength="60" />
+            </label>
+            <label>
+              <span class="form-label">Anos de experiência</span>
+              <input type="number" id="pf-years" min="0" max="40" step="1" value="2" />
+            </label>
+          </div>
+
+          <div class="form-row">
+            <label>
+              <span class="form-label">Stack principal</span>
+              <select id="pf-stack" required>
+                <option value="backend">Backend</option>
+                <option value="frontend">Frontend</option>
+                <option value="fullstack">Full-stack</option>
+                <option value="devops">DevOps / SRE</option>
+                <option value="data">Data / ML</option>
+                <option value="mobile">Mobile</option>
+              </select>
+            </label>
+            <label>
+              <span class="form-label">Nível alvo</span>
+              <select id="pf-level" required>
+                <option value="junior">Junior</option>
+                <option value="mid" selected>Mid-level</option>
+                <option value="senior">Senior</option>
+              </select>
+            </label>
+            <label>
+              <span class="form-label">Linguagem principal</span>
+              <select id="pf-lang">
+                <option>Go</option>
+                <option>Python</option>
+                <option>Java</option>
+                <option>JavaScript</option>
+                <option>TypeScript</option>
+                <option>C#</option>
+                <option>Ruby</option>
+                <option>Rust</option>
+                <option>Outra</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="form-fullwidth">
+            <span class="form-label">Descrição da vaga / função alvo</span>
+            <textarea id="pf-target" rows="5" placeholder="Cola aqui o job posting, ou descreve com suas palavras: stack, responsabilidades, tipo de empresa, escala (ex: 'Backend engineer em fintech, Go + Kubernetes, sistemas de pagamento de alto volume')."></textarea>
+            <span class="form-hint">As palavras-chave aqui vão priorizar perguntas relacionadas (ex: "kubernetes", "payments", "ml pipeline").</span>
+          </label>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Salvar perfil e começar →</button>
+          </div>
+        </form>
       </div>
 
-      <div class="sim-question" id="question-box">
-        <div class="sim-qlabel">// question 1 of 5 · backend</div>
-        <div class="sim-qtext" id="question-text">
-          Explain the difference between <em>concurrency</em> and <em>parallelism</em>. Give a real-world example of each.
+      <!-- ETAPA 2: SIMULADOR (escondido até salvar perfil) -->
+      <div id="simulator-stage" style="display:none;">
+        <div class="profile-card" id="profile-card">
+          <div class="profile-card-info">
+            <div class="profile-card-name" id="pc-name">—</div>
+            <div class="profile-card-meta" id="pc-meta">—</div>
+            <div class="profile-card-target" id="pc-target"></div>
+          </div>
+          <button class="btn-secondary btn-mini" type="button" onclick="editProfile()">Editar perfil</button>
         </div>
-      </div>
 
-      <textarea class="sim-input" id="answer-input" placeholder="Type your answer in English..."></textarea>
+        <div class="sim-question" id="question-box">
+          <div class="sim-qlabel">// carregando perguntas…</div>
+          <div class="sim-qtext" id="question-text">
+            Aguarde, ajustando o simulador ao seu perfil…
+          </div>
+        </div>
 
-      <div class="sim-actions">
-        <button class="btn-primary" onclick="submitAnswer()">Submit answer</button>
-        <button class="btn-secondary" onclick="nextQuestion()">Skip →</button>
-        <span class="sim-hint" id="char-count">0 / 50 chars mínimos</span>
-      </div>
+        <div class="answer-wrap">
+          <textarea class="sim-input" id="answer-input" placeholder="Type your answer in English... or click 🎙️ to dictate"></textarea>
+          <button type="button" class="mic-btn" id="mic-btn" title="Speech-to-text (Chrome)" onclick="toggleVoice()">🎙️</button>
+        </div>
 
-      <div class="feedback-panel" id="feedback-panel">
-        <div class="fb-header">
-          <span class="fb-label">// ai feedback</span>
-          <span class="score-badge" id="score-badge">—</span>
+        <div class="sim-actions">
+          <button class="btn-primary" id="submit-btn" onclick="submitAnswer()">Submit answer</button>
+          <button class="btn-secondary" onclick="nextQuestion()">Skip →</button>
+          <span class="sim-hint" id="char-count">0 / 50 chars mínimos</span>
         </div>
-        <div class="fb-section">
-          <h4>// technical accuracy</h4>
-          <p id="fb-technical"></p>
-        </div>
-        <div class="fb-section">
-          <h4>// english improvements</h4>
-          <ul id="fb-english"></ul>
-        </div>
-        <div class="fb-section">
-          <h4>// suggested vocabulary</h4>
-          <ul id="fb-vocab"></ul>
-        </div>
-        <div style="margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border);">
-          <button class="btn-primary" onclick="nextQuestion()" style="font-size:0.85rem; padding:0.6rem 1.25rem;">Next question →</button>
+
+        <div class="feedback-panel" id="feedback-panel">
+          <div class="fb-header">
+            <span class="fb-label">// ai feedback</span>
+            <span class="score-badge" id="score-badge">—</span>
+          </div>
+          <div class="fb-section">
+            <h4>// technical accuracy</h4>
+            <p id="fb-technical"></p>
+          </div>
+          <div class="fb-section">
+            <h4>// english improvements</h4>
+            <ul id="fb-english"></ul>
+          </div>
+          <div class="fb-section">
+            <h4>// suggested vocabulary</h4>
+            <ul id="fb-vocab"></ul>
+          </div>
+          <div style="margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border);">
+            <button class="btn-primary" onclick="nextQuestion()" style="font-size:0.85rem; padding:0.6rem 1.25rem;">Next question →</button>
+          </div>
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- DASHBOARD (só aparece quando logado) -->
+<section id="dashboard" style="border-top: 1px solid var(--border); display:none;">
+  <div class="section-label">// meu progresso</div>
+  <h2>Sua evolução</h2>
+  <p class="section-sub">Histórico de avaliações persistido na sua conta.</p>
+
+  <div class="dash-stats" id="dash-stats">
+    <div class="dash-stat"><div class="dash-stat-num" id="ds-count">0</div><div class="dash-stat-label">avaliações</div></div>
+    <div class="dash-stat"><div class="dash-stat-num" id="ds-avg">—</div><div class="dash-stat-label">média geral</div></div>
+    <div class="dash-stat"><div class="dash-stat-num" id="ds-best">—</div><div class="dash-stat-label">melhor score</div></div>
+    <div class="dash-stat"><div class="dash-stat-num" id="ds-stack">—</div><div class="dash-stat-label">stack focada</div></div>
+  </div>
+
+  <div class="dash-spark" id="dash-spark"></div>
+
+  <div class="dash-list" id="dash-list">
+    <p class="section-sub" style="margin-top:1.5rem;">Carregando histórico…</p>
   </div>
 </section>
 
@@ -229,13 +400,14 @@
     <div class="roadmap-col">
       <h3>Produto</h3>
       <ul>
-        <li><span class="r-dot r-wip"></span>Frontend web</li>
-        <li><span class="r-dot r-todo"></span>API principal</li>
-        <li><span class="r-dot r-todo"></span>Autenticação</li>
-        <li><span class="r-dot r-todo"></span>Integração OpenAI</li>
-        <li><span class="r-dot r-todo"></span>Speech-to-text</li>
-        <li><span class="r-dot r-todo"></span>Simulador completo</li>
-        <li><span class="r-dot r-todo"></span>Dashboard candidato</li>
+        <li><span class="r-dot r-done"></span>Frontend web</li>
+        <li><span class="r-dot r-done"></span>API principal</li>
+        <li><span class="r-dot r-done"></span>Perfil do candidato</li>
+        <li><span class="r-dot r-done"></span>Simulador personalizado</li>
+        <li><span class="r-dot r-done"></span>Autenticação</li>
+        <li><span class="r-dot r-done"></span>Integração OpenAI</li>
+        <li><span class="r-dot r-done"></span>Speech-to-text</li>
+        <li><span class="r-dot r-done"></span>Dashboard candidato</li>
       </ul>
     </div>
     <div class="roadmap-col">
@@ -262,7 +434,7 @@
   <span>© 2026 DevSpeak AI — open source</span>
   <div style="display:flex;gap:1.5rem;">
     <a href="https://github.com/Dudainfinity/devspeak-ai" target="_blank">GitHub</a>
-    <a href="http://13.220.172.249:8080/health" target="_blank">API Health</a>
+    <a href="/health" target="_blank">API Health</a>
   </div>
 </footer>
 
